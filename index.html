@@ -1,0 +1,1006 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Koltuk — Sinem</title>
+<style>
+  :root{
+    --bg:#0e1013; --panel:#171a1f; --panel2:#1e232a; --line:#2a3038;
+    --ink:#e8eaed; --dim:#98a1ad; --faint:#6b7480;
+    --acc:#e0a458; --acc2:#7bb0a0; --warn:#d1725b; --ok:#7bb0a0;
+    --r:14px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  .wrap{max-width:860px;margin:0 auto;padding:22px 16px 80px}
+  header{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:4px}
+  h1{font-size:26px;margin:0;letter-spacing:-.5px}
+  h1 span{color:var(--acc)}
+  .sub{color:var(--faint);font-size:13px}
+  .demo-pill{font-size:11px;padding:3px 9px;border-radius:999px;background:#3a2a1a;color:var(--acc);border:1px solid #4a3a22}
+  .theme-bar{margin:16px 0 18px;padding:14px 16px;background:linear-gradient(135deg,#1d2229,#171a1f);
+    border:1px solid var(--line);border-left:3px solid var(--acc);border-radius:var(--r)}
+  .theme-bar .lbl{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--acc)}
+  .theme-bar .txt{font-size:17px;margin-top:4px}
+  nav{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:18px;scrollbar-width:none}
+  nav::-webkit-scrollbar{display:none}
+  nav button{flex:0 0 auto;background:var(--panel);border:1px solid var(--line);color:var(--dim);
+    padding:8px 16px;border-radius:999px;cursor:pointer;font-size:14px;font-family:inherit}
+  nav button.on{background:var(--acc);color:#1a1206;border-color:var(--acc);font-weight:600}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px}
+  .card h2{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin:0 0 12px}
+  .card h2 .hint{text-transform:none;letter-spacing:0;color:var(--faint);font-weight:400;float:right;font-size:11px}
+  .row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+  .row:last-child{border-bottom:0}
+  .chk{width:22px;height:22px;flex:0 0 auto;border:1.5px solid #3a424c;border-radius:7px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;font-size:13px;color:transparent;transition:.12s}
+  .chk.on{background:var(--ok);border-color:var(--ok);color:#0e1013}
+  .row.done .lab{color:var(--faint);text-decoration:line-through}
+  .lab{flex:1}
+  .tag{font-size:10.5px;padding:2px 7px;border-radius:999px;border:1px solid var(--line);color:var(--dim);white-space:nowrap}
+  .tag.a1{color:#e0a458;border-color:#4a3a22}
+  .tag.a2{color:#8ab4d8;border-color:#26384a}
+  .tag.a3{color:#7bb0a0;border-color:#254038}
+  .grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+  .stat{background:var(--panel2);border-radius:11px;padding:12px 14px}
+  .stat .n{font-size:24px;font-weight:600;letter-spacing:-.5px}
+  .stat .k{font-size:11.5px;color:var(--faint);margin-top:2px}
+  input[type=text],input[type=number],textarea,select{width:100%;background:var(--panel2);border:1px solid var(--line);
+    color:var(--ink);border-radius:9px;padding:10px 12px;font:inherit;font-size:14px}
+  textarea{resize:vertical;min-height:64px}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--acc)}
+  .btn{background:var(--panel2);border:1px solid var(--line);color:var(--ink);padding:9px 14px;
+    border-radius:9px;cursor:pointer;font:inherit;font-size:13.5px}
+  .btn:hover{border-color:#3d4550}
+  .btn:disabled{opacity:.5;cursor:default}
+  .btn.p{background:var(--acc);color:#1a1206;border-color:var(--acc);font-weight:600}
+  .btn.g{background:transparent;color:var(--dim)}
+  .btn.sm{padding:5px 10px;font-size:12px}
+  .flex{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .water{display:flex;gap:6px}
+  .drop{width:30px;height:30px;border-radius:8px;border:1.5px solid #3a424c;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;font-size:14px;opacity:.35}
+  .drop.on{opacity:1;background:#1d3340;border-color:#3d6b80}
+  .bar{height:8px;background:var(--panel2);border-radius:99px;overflow:hidden;margin:8px 0}
+  .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2));border-radius:99px}
+  .muted{color:var(--dim);font-size:13.5px}
+  .tiny{color:var(--faint);font-size:12px}
+  .flow{border-left:3px solid var(--acc2)}
+  ol.rules{counter-reset:r;list-style:none;padding:0;margin:0}
+  ol.rules li{counter-increment:r;padding:13px 0 13px 42px;border-bottom:1px solid var(--line);position:relative}
+  ol.rules li:last-child{border-bottom:0}
+  ol.rules li:before{content:counter(r);position:absolute;left:0;top:12px;width:26px;height:26px;border-radius:99px;
+    background:var(--panel2);color:var(--acc);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+  ol.rules b{display:block;margin-bottom:3px}
+  ol.rules span{color:var(--dim);font-size:13.5px}
+  .park-item{display:flex;gap:10px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--line)}
+  .park-item:last-child{border-bottom:0}
+  .badge{font-size:10.5px;padding:2px 7px;border-radius:999px;background:#3a2a1a;color:var(--acc);white-space:nowrap}
+  .badge.ready{background:#24382f;color:var(--ok)}
+  .hidden{display:none}
+  .gate{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;
+    padding:20px;z-index:20}
+  .gate.hidden{display:none}
+  .gate-box{width:100%;max-width:360px;background:var(--panel);border:1px solid var(--line);
+    border-radius:var(--r);padding:24px}
+  .gate-box h1{font-size:24px}
+  .signout{background:none;border:0;color:var(--faint);font:inherit;font-size:12px;cursor:pointer;padding:0}
+  .signout:hover{color:var(--dim)}
+  .save{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--panel2);
+    border:1px solid var(--line);color:var(--dim);padding:7px 16px;border-radius:99px;font-size:12.5px;
+    opacity:0;transition:.25s;pointer-events:none;z-index:9}
+  .save.on{opacity:1}
+  a{color:var(--acc2)}
+  .area-card{background:var(--panel2);border-radius:11px;padding:13px;margin-bottom:10px;border-left:3px solid var(--line)}
+  .area-card.a1{border-left-color:#e0a458}
+  .area-card.a2{border-left-color:#8ab4d8}
+  .area-card.a3{border-left-color:#7bb0a0}
+  .area-card .nm{font-weight:600;margin-bottom:3px}
+  details summary{cursor:pointer;color:var(--dim);font-size:13.5px;padding:6px 0}
+  details[open] summary{color:var(--ink);margin-bottom:6px}
+  .segs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .segs button{background:var(--panel2);border:1px solid var(--line);color:var(--dim);
+    padding:6px 12px;border-radius:999px;cursor:pointer;font:inherit;font-size:13px}
+  .segs button.on{border-color:var(--acc);color:var(--acc);font-weight:600}
+  .task{display:flex;gap:10px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--line)}
+  .task:last-child{border-bottom:0}
+  .task .ph{font-weight:600;font-size:14px}
+  .task.done .ph{color:var(--faint);text-decoration:line-through}
+  .task .ds{color:var(--dim);font-size:13px;margin-top:3px}
+  .task.done .ds{color:var(--faint)}
+  .tl{position:relative;padding-left:20px;margin:2px 0 4px}
+  .tl:before{content:'';position:absolute;left:5px;top:6px;bottom:6px;width:2px;background:var(--line)}
+  .tl-item{position:relative;padding:8px 0}
+  .tl-item:before{content:'';position:absolute;left:-19px;top:14px;width:10px;height:10px;border-radius:99px;
+    background:var(--panel2);border:2px solid var(--line)}
+  .tl-item.now:before{background:var(--acc);border-color:var(--acc)}
+  .tl-item.past{opacity:.45}
+  .tl-item .w{font-weight:600;font-size:14px}
+  .tl-item .n{font-size:12px;color:var(--faint)}
+  .ai{background:linear-gradient(135deg,#1b232a,#171a1f);border:1px solid #26384a;border-radius:11px;padding:14px;margin-top:12px}
+  .ai h4{margin:0 0 8px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#8ab4d8}
+  .ai p{margin:0 0 10px;font-size:14px}
+  .ai .sug{background:var(--panel2);border-radius:9px;padding:10px 12px;margin-bottom:8px;font-size:13.5px}
+  .spin{display:inline-block;width:13px;height:13px;border:2px solid var(--line);border-top-color:var(--acc);
+    border-radius:99px;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:6px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  @media(max-width:520px){h1{font-size:22px}.wrap{padding:16px 12px 80px}}
+</style>
+</head>
+<body>
+<div class="gate hidden" id="gate">
+  <div class="gate-box">
+    <h1 style="margin-bottom:4px">Koltuk<span>.</span></h1>
+    <div class="muted" style="margin-bottom:16px">Devam etmek için giriş yap.</div>
+    <input type="email" id="gEmail" placeholder="e-posta" autocomplete="username">
+    <div style="height:8px"></div>
+    <input type="password" id="gPass" placeholder="şifre" autocomplete="current-password">
+    <div style="height:12px"></div>
+    <div class="flex">
+      <button class="btn p" id="gIn">Giriş yap</button>
+      <button class="btn g" id="gUp">İlk kez mi? Hesabı oluştur</button>
+    </div>
+    <div class="tiny" id="gMsg" style="margin-top:10px"></div>
+  </div>
+</div>
+
+<div class="wrap hidden" id="app">
+  <header>
+    <h1>Koltuk<span>.</span></h1>
+    <div class="sub" id="today"></div>
+    <span class="demo-pill hidden" id="demoPill">demo — örnek veri</span>
+    <button class="signout hidden" id="signOut">çıkış</button>
+  </header>
+  <div class="sub" style="margin-top:2px">Kendi hayatının baş karakteri olarak oturduğun yer.</div>
+
+  <div class="theme-bar">
+    <div class="lbl">Bu ayın teması</div>
+    <div class="txt" id="themeTxt">—</div>
+  </div>
+
+  <nav id="nav"></nav>
+
+  <!-- ============ BUGÜN ============ -->
+  <section id="tab-bugun">
+    <div class="card" id="flowCard">
+      <h2>Bugün<span class="hint" id="dayPct"></span></h2>
+      <div class="flex" style="margin-bottom:10px">
+        <button class="btn sm" id="flowBtn">🌀 Bugün akış günü</button>
+        <span class="tiny">Akış gününde hiçbir şey işaretlenmez ve hiçbir şey eksik sayılmaz.</span>
+      </div>
+      <div id="anchors"></div>
+      <div class="row" style="border-top:1px solid var(--line);border-bottom:0">
+        <div class="lab">💧 Stanley</div>
+        <div class="water" id="water"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Bu haftanın 3 taahhüdü<span class="hint">pazar günü yazılır</span></h2>
+      <div id="weekCommitToday"></div>
+    </div>
+
+    <div class="card">
+      <h2>Bugüne bir cümle</h2>
+      <textarea id="dayNote" placeholder="Nasıldı? Tek satır yeter."></textarea>
+    </div>
+  </section>
+
+  <!-- ============ PAZAR ============ -->
+  <section id="tab-pazar" class="hidden">
+    <div class="card">
+      <h2>Pazar check-in<span class="hint" id="weekLabel"></span></h2>
+      <div class="muted" style="margin-bottom:12px">15 dakika. Bitince kapat — hafta boyunca bir daha açmak zorunda değilsin.</div>
+      <div class="grid" id="weekStats"></div>
+
+      <div style="margin-top:14px" class="flex">
+        <button class="btn p" id="aiBtn">✦ Haftamı oku, 3 taahhüt öner</button>
+        <span class="tiny" id="aiHint">Verine bakar, önerir. Kabul etmek zorunda değilsin.</span>
+      </div>
+      <div id="aiOut"></div>
+    </div>
+
+    <div class="card">
+      <h2>Gelecek haftanın 3 taahhüdü<span class="hint">alan başına 1</span></h2>
+      <div id="commitEditor"></div>
+    </div>
+
+    <div class="card">
+      <h2>Hafta notu</h2>
+      <input type="text" id="wWin" placeholder="İyi giden bir şey">
+      <div style="height:8px"></div>
+      <input type="text" id="wDrag" placeholder="Takıldığım bir şey (suçlama yok, tespit)">
+      <div style="height:12px"></div>
+      <div class="tiny" style="margin-bottom:6px">Enerji</div>
+      <div class="flex" id="moodRow"></div>
+    </div>
+
+    <div class="card">
+      <h2>İnsan ritüelleri<span class="hint">alan değil, sadece olur</span></h2>
+      <div id="rituals"></div>
+      <div style="margin-top:14px" class="flex">
+        <button class="btn p" id="closeWeek">Haftayı kapat</button>
+        <span class="tiny" id="weekClosedTxt"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Geçmiş haftalar</h2>
+      <div id="weekHistory" class="muted">—</div>
+    </div>
+  </section>
+
+  <!-- ============ YOL ============ -->
+  <section id="tab-yol" class="hidden">
+    <div class="card" id="compassCard">
+      <h2>Pusula<span class="hint">yılda bir yazılır, aya bir bakılır</span></h2>
+      <div class="tiny" style="margin-bottom:4px">Bu yılın yönü</div>
+      <input type="text" id="cYear" placeholder="Bu yıl neyin yılı? Tek cümle.">
+      <div style="height:10px"></div>
+      <div class="tiny" style="margin-bottom:4px">Bu çeyrek <span id="cQLabel"></span></div>
+      <input type="text" id="cQuarter" placeholder="Önümüzdeki 3 ay neye ayrıldı?">
+    </div>
+
+    <div class="card">
+      <h2>Ay<span class="hint" id="monthLabel"></span></h2>
+      <input type="text" id="mTheme" placeholder="Bu ay neyin ayı? Tek cümle.">
+      <div style="height:12px"></div>
+      <div id="monthGoals"></div>
+      <details>
+        <summary>Ay sonu notu</summary>
+        <textarea id="mReview" placeholder="Ne oldu, neyi bıraktım, gelecek ay neyin ayı?"></textarea>
+        <div class="flex" style="margin-top:10px">
+          <button class="btn sm" id="monthAiBtn">✦ Ayı kapat, gelecek ayı öner</button>
+          <span class="tiny">Notu ve gelecek ayın temasını taslak olarak yazar.</span>
+        </div>
+        <div id="monthAiOut"></div>
+      </details>
+    </div>
+
+    <div class="card">
+      <h2>Aktif 3 alan<span class="hint">değiştirmek için Park'tan terfi ettir</span></h2>
+      <div id="areasBox"></div>
+    </div>
+
+    <div class="card">
+      <h2>Takvim<span class="hint">nerede olduğunu unutma diye</span></h2>
+      <div class="tl" id="timeline"></div>
+      <details>
+        <summary>Kilometre taşı ekle</summary>
+        <div class="flex">
+          <input type="date" id="msWhen" style="width:auto;flex:0 0 auto">
+          <input type="text" id="msWhat" placeholder="Ne oluyor?" style="flex:1;min-width:150px">
+          <button class="btn sm p" id="msAdd">Ekle</button>
+        </div>
+      </details>
+    </div>
+
+    <div class="card">
+      <h2>Geçmiş aylar<span class="hint">sistem hafızası</span></h2>
+      <div id="monthHistory" class="muted">—</div>
+    </div>
+
+    <div class="card">
+      <h2>Checklist<span class="hint" id="gPct"></span></h2>
+      <div class="segs" id="catSegs"></div>
+      <div id="taskList" class="muted">—</div>
+    </div>
+
+    <div class="card">
+      <h2>Borç<span class="hint">Defter'den canlı</span></h2>
+      <div class="grid" id="debtStats"></div>
+      <div class="bar"><i id="debtBar" style="width:0%"></i></div>
+      <div class="tiny" id="debtNote">—</div>
+      <div style="margin-top:12px" class="flex">
+        <a class="btn" href="https://resilient-llama-08755e.netlify.app/" target="_blank" rel="noopener">Defter'i aç ↗</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PARK ============ -->
+  <section id="tab-park" class="hidden">
+    <div class="card">
+      <h2>Park<span class="hint">silinmez, bekler</span></h2>
+      <div class="muted" style="margin-bottom:10px"><b>30 gün kuralı:</b> 30 gün sonra hâlâ istiyorsan konuşuruz. Çoğu istek 30 günü geçmez — ve geçmeyen istek sana para ve enerji kaybettirmemiş olur.</div>
+      <div class="flex">
+        <input type="text" id="parkInput" placeholder="Ne istiyorsun?" style="flex:1;min-width:180px">
+        <select id="parkKind" style="width:auto"><option value="istek">istek</option><option value="hobi">hobi</option><option value="proje">proje</option><option value="alışveriş">alışveriş</option><option value="bıraktım">bıraktım</option></select>
+        <button class="btn p" id="parkAdd">Ekle</button>
+      </div>
+      <div style="height:14px"></div>
+      <div id="parkList" class="muted">—</div>
+    </div>
+
+    <div class="card">
+      <h2>Anayasa<span class="hint">kararsız kaldığında buraya bak</span></h2>
+      <ol class="rules">
+        <li><b>Aynı anda 3 alan.</b><span>Dördüncüsü Park'ta bekler. Aynı anda dört şeye başlamak, dördünü de yarım bırakmanın adıdır.</span></li>
+        <li><b>%70 yeter.</b><span>7/7 değil, 5/7 çapa = başarılı hafta. Mükemmeliyetçilik "ya hep ya hiç" der; sistem "çoğunlukla" der.</span></li>
+        <li><b>Haftada bir akış günü.</b><span>Plansız, işaretsiz, suçsuz. Hayatın plansız akışı senden bir şey almıyor — sistemin içinde ona yer var.</span></li>
+        <li><b>Yeni istek → 30 gün Park'ta.</b><span>Anında satın alma yok, anında kayıt olma yok.</span></li>
+        <li><b>Borç bitene kadar yeni taksit yok.</b><span>Hobi bütçesi = ay kapanışındaki artının yarısı. Borç bir yasak değil, bir sıra.</span></li>
+        <li><b>Pazar 15 dakika.</b><span>Zorunlu tek an bu. Sistem seni yönetmez, sen pazar günü sistemi yönetirsin.</span></li>
+        <li><b>Bırakmak serbest — ama bilinçli bırak.</b><span>Bitirmediğin şeyler değil, karara bağlamadığın şeyler yoruyor seni.</span></li>
+        <li><b>Bir şeyi ertelemek, bırakmak değildir.</b><span>Design Nisan 2027'de başlıyor. Tarihi olan erteleme, yarım bırakma değil; sıraya koymadır.</span></li>
+        <li><b>Hayır cümlesi.</b><span>"Bu ay şuna söz verdim, ona sığmıyor. Sonra tekrar konuşalım." — Planın net olduğunda hayır demek tartışma değil, bilgi paylaşımıdır.</span></li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h2>Katmanlar</h2>
+      <div class="muted" style="line-height:1.9">
+        <b style="color:var(--acc)">Çapalar</b> — her gün, 4 tane, %70 kuralıyla. Bedenin ve enerjin.<br>
+        <b style="color:#8ab4d8">Alanlar</b> — aynı anda 3, aylık hedefi olan. Hayatının yönü.<br>
+        <b style="color:var(--acc2)">Ritüeller</b> — takvimde tekrar eden insan ilişkileri. Hedefi yok, sadece olur.<br>
+        <b style="color:var(--dim)">Park</b> — henüz sıra gelmemiş her şey. Ölmez, bekler.
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="save" id="saveTag">kaydedildi</div>
+
+<script type="module">
+/* ================= AYAR =================
+   Kendi kopyanda aşağıyı doldur. Boş bırakılırsa site
+   demo modunda, örnek verilerle açılır (GitHub sürümü böyle). */
+const SUPABASE_URL = '';
+const SUPABASE_KEY = '';
+/* ======================================= */
+
+const DEMO = !SUPABASE_URL || !SUPABASE_KEY;
+
+/* ---------- sabitler ---------- */
+const ANCHORS = [
+  {id:'hareket', label:'🚶 Hareket — en az 20 dk (yürüyüş de sayılır)'},
+  {id:'cilt',    label:'✨ Cilt bakımı — sabah + akşam, 10 dk'},
+  {id:'uyku',    label:'🌙 Aynı saatte yattım'},
+  {id:'sabah',   label:'📓 Sabah alanı — 30 dk yazma (hedef: haftada 3)'}
+];
+const RITUALS = [
+  {id:'pilates', label:'Pilates ×2', n:2},
+  {id:'iliski',  label:'İlişki: 30 dk "biz" konuşması', n:1},
+  {id:'aile',    label:'Aile: ara veya gör', n:1},
+  {id:'arkadas', label:'Arkadaş: 1 temas', n:1},
+  {id:'dernek',  label:'Dernek buluşması (ayda 1)', n:1}
+];
+const DEFAULT_AREAS = [
+  {id:'a1', name:'Borç', why:'Bu bitene kadar diğer her şey daha küçük ölçekte kalır. Çıkış kapısı burası.'},
+  {id:'a2', name:'Geçiş', why:'Ekim: yeni işe hazırlık ve giriş. Kasım–Mart: işte oturma. Design Nisan 2027\'de başlıyor.'},
+  {id:'a3', name:'Beden', why:'Hareket, uyku, cilt, su. Diğer iki alanın yakıtı. Zorlamadan, çapalarla.'}
+];
+const TABS = [['bugun','Bugün'],['pazar','Pazar'],['yol','Yol'],['park','Park']];
+const CATS = [['yeniis','Yeni iş'],['faz0','Faz 0'],['design_nisan','Design · Nisan 2027']];
+const DEFAULT_COMPASS = {
+  yearText:'', quarterText:'',
+  horizon:[
+    {when:'2026-10-20', what:'Turkish Technology ilk gün'},
+    {when:'2027-04-20', what:'Design çalışmasına başla'}
+  ]
+};
+const DEBT_START = 290000;
+
+/* ---------- yardımcılar ---------- */
+const $ = s => document.querySelector(s);
+const iso = d => new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);
+const TODAY = new Date();
+function mondayOf(d){const x=new Date(d);const w=(x.getDay()+6)%7;x.setDate(x.getDate()-w);x.setHours(0,0,0,0);return x;}
+const WEEK_START = iso(mondayOf(TODAY));
+const YM = TODAY.getFullYear()+'-'+String(TODAY.getMonth()+1).padStart(2,'0');
+const TRDAY=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
+const TRMON=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+const fmtTL = n => new Intl.NumberFormat('tr-TR',{maximumFractionDigits:0}).format(Math.round(n||0))+' ₺';
+function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function debounce(fn,ms=600){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms)}}
+let saveTimer;
+function flashSaved(){const t=$('#saveTag');t.classList.add('on');clearTimeout(saveTimer);saveTimer=setTimeout(()=>t.classList.remove('on'),1400);}
+
+/* ---------- veri katmanı ----------
+   Aynı arayüz iki kaynağı da karşılar: Supabase ya da demo. */
+const DB = DEMO ? await makeDemoDB() : await makeSupabaseDB();
+
+async function makeSupabaseDB(){
+  const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+  const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+  return {
+    sb,
+    async token(){
+      const {data} = await sb.auth.getSession();
+      return (data.session && data.session.access_token) || SUPABASE_KEY;
+    },
+    async load(){
+      const since = iso(new Date(TODAY.getTime()-34*864e5));
+      const [day, week, month, areas, park, days30, debts, weeks, tasks, months] = await Promise.all([
+        sb.from('koltuk_days').select('*').eq('d',iso(TODAY)).maybeSingle(),
+        sb.from('koltuk_weeks').select('*').eq('week_start',WEEK_START).maybeSingle(),
+        sb.from('koltuk_months').select('*').eq('ym',YM).maybeSingle(),
+        sb.from('koltuk_settings').select('*').in('key',['areas','compass']),
+        sb.from('koltuk_park').select('*').order('created_at',{ascending:false}),
+        sb.from('koltuk_days').select('*').gte('d',since),
+        sb.from('fin_debts').select('*'),
+        sb.from('koltuk_weeks').select('*').order('week_start',{ascending:false}).limit(8),
+        sb.from('design_tasks').select('*').order('order_index',{ascending:true}),
+        sb.from('koltuk_months').select('*').order('ym',{ascending:false}).limit(24)
+      ]);
+      const setting = k => (areas.data||[]).find(r=>r.key===k);
+      return {
+        day:day.data, week:week.data, month:month.data,
+        areas:(setting('areas')||{}).value||null,
+        compass:(setting('compass')||{}).value||null,
+        park:park.data||[], days30:days30.data||[], debts:debts.data||[],
+        weeks:weeks.data||[], tasks:tasks.data||[], months:months.data||[]
+      };
+    },
+    saveCompass: v => sb.from('koltuk_settings').upsert({key:'compass', value:v, updated_at:new Date().toISOString()}),
+    saveDay: d => sb.from('koltuk_days').upsert({...d, updated_at:new Date().toISOString()}),
+    saveWeek: w => sb.from('koltuk_weeks').upsert({...w, updated_at:new Date().toISOString()}),
+    saveMonth: m => sb.from('koltuk_months').upsert({...m, updated_at:new Date().toISOString()}),
+    async addPark(text, kind){
+      const {data} = await sb.from('koltuk_park').insert({text,kind}).select().maybeSingle();
+      return data;
+    },
+    delPark: id => sb.from('koltuk_park').delete().eq('id',id),
+    setTask: (id,done) => sb.from('design_tasks').update({done, updated_at:new Date().toISOString()}).eq('id',id),
+    async ai(payload, mode){
+      const r = await fetch(SUPABASE_URL+'/functions/v1/koltuk-ai',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+(await this.token())},
+        body:JSON.stringify({...payload, mode: mode||'weekly'})
+      });
+      const j = await r.json();
+      if(!r.ok) throw new Error(j.error || 'AI çağrısı başarısız');
+      return j;
+    }
+  };
+}
+
+async function makeDemoDB(){
+  const back = n => iso(new Date(TODAY.getTime()-n*864e5));
+  const rnd = seed => { let x=Math.sin(seed)*1e4; return x-Math.floor(x); };
+  const days30 = Array.from({length:28},(_,i)=>{
+    const anchors={};
+    ANCHORS.forEach((a,j)=>{ if(rnd(i*7+j)>0.32) anchors[a.id]=true; });
+    anchors.su = Math.round(rnd(i)*3);
+    return {d:back(i+1), anchors, flow_day: i%7===5, note:''};
+  });
+  const state = {
+    day:{d:iso(TODAY),anchors:{hareket:true,cilt:true,su:2},flow_day:false,note:''},
+    week:{week_start:WEEK_START,commitments:[
+      {area:'a1',text:'Kart ekstresini Defter\'e gir',done:true},
+      {area:'a2',text:'SQL: window fonksiyonları, 3 gün × 30 dk',done:false},
+      {area:'a3',text:'Pilates ×2',done:false}
+    ],rituals:{pilates:1,aile:1},win:'İki gün üst üste yürüdüm',drag:'Akşamları telefon',mood:-1,energy:4,closed:false},
+    month:{ym:YM,theme:'Yeni işe sakin girdiğim, borcu büyütmediğim ay.',goals:[
+      {area:'a1',text:'Yeni borç yok, ödemeler zamanında',done:false},
+      {area:'a2',text:'Yeni işe hazırlık: günde 1 net blok',done:false},
+      {area:'a3',text:'Haftada 2-3 akış günü, uyku saati sabit',done:false}
+    ],review:''},
+    areas:DEFAULT_AREAS,
+    compass:{
+      yearText:'Borçsuz, oturmuş bir işte ve ev yatırımına hazır bir yıl.',
+      quarterText:'Yeni işe sakin gir, borcu büyütme, dinlen.',
+      horizon:[
+        {when:'2026-10-20', what:'Turkish Technology ilk gün'},
+        {when:'2027-04-20', what:'Design çalışmasına başla'},
+        {when:'2027-12-31', what:'Borçların bitmesi hedefi'},
+        {when:'2028-01-01', what:'Ev peşinatı birikimine geç'}
+      ]
+    },
+    months:[
+      {ym:'2026-08', theme:'Borçları büyütmeden, ana oda toplama ayı.', goals:[{text:'x',done:true},{text:'y',done:false}], review:'Eylülde: borç, design, hareket.'}
+    ],
+    park:[
+      {id:1,text:'Dans kursu',kind:'hobi',created_at:new Date(TODAY.getTime()-41*864e5).toISOString()},
+      {id:2,text:'Yarım kalan kitapları bitirme',kind:'istek',created_at:new Date(TODAY.getTime()-12*864e5).toISOString()},
+      {id:3,text:'Design geçişi — Nisan 2027\'de başlıyor',kind:'proje',created_at:new Date(TODAY.getTime()-3*864e5).toISOString()}
+    ],
+    days30,
+    debts:[
+      {id:'d1',name:'İhtiyaç kredisi',amount:118000,rate:39,min_payment:6400,due_day:15},
+      {id:'d2',name:'Kredi kartı',amount:47500,rate:52,min_payment:2900,due_day:8},
+      {id:'d3',name:'Taksitli alışveriş',amount:12300,rate:0,min_payment:1400,due_day:22}
+    ],
+    weeks:[
+      {week_start:back(7),win:'Pazar check-in\'i kaçırmadım',commitments:[{text:'x',done:true},{text:'y',done:true},{text:'z',done:false}]},
+      {week_start:back(14),win:'Faz 0 formu bitti',commitments:[{text:'x',done:true},{text:'y',done:false}]}
+    ],
+    tasks:[
+      {id:'y1',phase_label:'SQL\'i tazele',description:'Join tipleri, subquery, window fonksiyonları. Bankacılık şemasında pratik.',order_index:1,done:true,category:'yeniis'},
+      {id:'y2',phase_label:'Rest Assured ile API testi',description:'Java + Rest Assured ile küçük bir proje: spec, schema validation, auth.',order_index:2,done:false,category:'yeniis'},
+      {id:'y3',phase_label:'Selenium + Page Object',description:'Katmanlı mimari kur, kendi e2e deneyimini Selenium diline çevir.',order_index:3,done:false,category:'yeniis'},
+      {id:'f1',phase_label:'İlk 5 test kişisi',description:'Formu ve çekim rehberini gönder, fotoğrafları topla.',order_index:1,done:true,category:'faz0'},
+      {id:'f2',phase_label:'Karar kapısı',description:'≥3/5 tekrar isterim, ≥2/5 fiyat telaffuz → Faz 1.',order_index:2,done:false,category:'faz0'},
+      {id:'n1',phase_label:'Figma temelleri',description:'Nisan 2027\'de başlar. Frame, auto-layout, component, stiller.',order_index:1,done:false,category:'design_nisan'}
+    ]
+  };
+  const wait = ms => new Promise(r=>setTimeout(r,ms));
+  return {
+    async load(){ await wait(120); return JSON.parse(JSON.stringify(state)); },
+    async saveDay(){}, async saveWeek(){}, async saveMonth(){}, async saveCompass(){},
+    async addPark(text,kind){ return {id:Date.now(),text,kind,created_at:new Date().toISOString()}; },
+    async delPark(){}, async setTask(){},
+    async ai(payload, mode){
+      await wait(900);
+      if(mode==='monthly') return {
+        review:'Bu ay üç hedeften ikisi tuttu; çapalar %68 ile hedefin hemen altında kaldı. Sürükleyen şey sabah yazma oldu, onun dışında sistem kendi kendine döndü.',
+        next_theme:'Yeni ritmi oturtma ayı: az hedef, düzenli uyku.',
+        next_goals:[
+          {area:'a1', text:'Yeni borç yok, ödemeler zamanında'},
+          {area:'a2', text:'Yeni işte ilk 30 gün soru listesini bitir'},
+          {area:'a3', text:'Haftada 2 pilates, uyku saati sabit'}
+        ],
+        watch:'Sabah yazma çapası üç aydır tutmuyor — ya saatini değiştir ya da listeden çıkar.',
+        demo:true
+      };
+      return {
+        summary:'Geçen hafta 5 günün 7\'sinde en az üç çapayı tutturmuşsun — %71, hedefin tam üstünde. Akış günün de var. Sürüklenen tek şey sabah yazma: dört haftadır haftada bir günü geçmiyor.',
+        commitments:[
+          {area:'a1',text:'Kart ekstresini Defter\'e gir ve minimumu ayır'},
+          {area:'a2',text:'SQL window fonksiyonları — 3 gün × 30 dk'},
+          {area:'a3',text:'Pilates ×2, birini hafta içine al'}
+        ],
+        no_sentence:'Bu ay hazırlığa söz verdim, ona sığmıyor — Kasım\'da tekrar konuşalım.',
+        watch:'Sabah yazma çapası dört haftadır tutmuyor; ya saatini değiştir ya da bu dönem için listeden çıkar.',
+        demo:true
+      };
+    }
+  };
+}
+
+/* ---------- durum ---------- */
+let S = { day:null, week:null, month:null, areas:DEFAULT_AREAS, compass:DEFAULT_COMPASS,
+          park:[], days30:[], debts:[], weeks:[], tasks:[], months:[] };
+let CAT = 'yeniis';
+const saveCompass = debounce(async()=>{ await DB.saveCompass(S.compass); flashSaved(); },700);
+function quarterOf(d){ return d.getFullYear()+'-Ç'+(Math.floor(d.getMonth()/3)+1); }
+
+const saveDay   = debounce(async()=>{ await DB.saveDay(S.day); flashSaved(); },450);
+const saveWeek  = debounce(async()=>{ await DB.saveWeek(S.week); flashSaved(); },500);
+const saveMonth = debounce(async()=>{ await DB.saveMonth(S.month); flashSaved(); },600);
+
+/* ---------- sekmeler ---------- */
+function setTab(id){
+  TABS.forEach(([t])=>{ $('#tab-'+t).classList.toggle('hidden',t!==id); });
+  [...$('#nav').children].forEach(b=>b.classList.toggle('on',b.dataset.t===id));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+$('#nav').innerHTML = TABS.map(([t,l])=>`<button data-t="${t}">${l}</button>`).join('');
+$('#nav').onclick = e => { if(e.target.dataset.t) setTab(e.target.dataset.t); };
+document.body.addEventListener('click', e=>{ if(e.target.dataset && e.target.dataset.goto) setTab(e.target.dataset.goto); });
+
+/* ---------- yükleme ---------- */
+async function load(){
+  const d = await DB.load();
+  S.day   = d.day   || {d:iso(TODAY), anchors:{}, flow_day:false, note:''};
+  S.week  = d.week  || {week_start:WEEK_START, commitments:[], rituals:{}, win:'', drag:'', mood:-1, energy:-1, closed:false};
+  S.month = d.month || {ym:YM, theme:'', goals:[], review:''};
+  S.areas = d.areas || DEFAULT_AREAS;
+  S.compass = d.compass || DEFAULT_COMPASS;
+  if(!S.compass.horizon) S.compass.horizon = [];
+  S.park = d.park; S.days30 = d.days30; S.debts = d.debts; S.weeks = d.weeks; S.tasks = d.tasks;
+  S.months = d.months || [];
+  if(!S.week.commitments || !S.week.commitments.length)
+    S.week.commitments = S.areas.map(a=>({area:a.id,text:'',done:false}));
+  if(!S.month.goals || !S.month.goals.length)
+    S.month.goals = S.areas.map(a=>({area:a.id,text:'',done:false}));
+  if(DEMO) $('#demoPill').classList.remove('hidden');
+  renderAll();
+}
+
+/* ---------- render ---------- */
+function renderAll(){ renderToday(); renderWeek(); renderYol(); renderPark(); }
+function areaTag(id){ const a=S.areas.find(x=>x.id===id); return a?`<span class="tag ${id}">${esc(a.name)}</span>`:''; }
+
+function renderToday(){
+  $('#today').textContent = `${TODAY.getDate()} ${TRMON[TODAY.getMonth()]} ${TODAY.getFullYear()}, ${TRDAY[TODAY.getDay()]}`;
+  $('#themeTxt').textContent = S.month.theme || 'Ay temanı henüz yazmadın — "Yol" sekmesinde bir cümle yeter.';
+
+  const flow = !!S.day.flow_day;
+  $('#flowCard').classList.toggle('flow', flow);
+  $('#flowBtn').textContent = flow ? '🌀 Akış günü — açık' : '🌀 Bugün akış günü';
+  $('#flowBtn').classList.toggle('p', flow);
+
+  $('#anchors').innerHTML = ANCHORS.map(a=>{
+    const on = !!(S.day.anchors||{})[a.id];
+    return `<div class="row ${on?'done':''}"><div class="chk ${on?'on':''}" data-anchor="${a.id}">✓</div><div class="lab">${a.label}</div></div>`;
+  }).join('');
+
+  const su = (S.day.anchors||{}).su || 0;
+  $('#water').innerHTML = [1,2,3].map(i=>`<div class="drop ${su>=i?'on':''}" data-su="${i}">💧</div>`).join('');
+
+  const doneN = ANCHORS.filter(a=>(S.day.anchors||{})[a.id]).length;
+  $('#dayPct').textContent = flow ? 'akış günü — sayılmıyor' : `${doneN}/4 çapa`;
+  $('#dayNote').value = S.day.note || '';
+
+  const cs = S.week.commitments||[];
+  $('#weekCommitToday').innerHTML = cs.every(c=>!c.text)
+    ? `<div class="muted">Bu hafta için taahhüt yazılmamış. <button class="btn sm" data-goto="pazar">Pazar check-in'e git</button></div>`
+    : cs.map((c,i)=>c.text?`<div class="row ${c.done?'done':''}"><div class="chk ${c.done?'on':''}" data-c="${i}">✓</div><div class="lab">${esc(c.text)}</div>${areaTag(c.area)}</div>`:'').join('');
+}
+
+function weekNumbers(){
+  const ws = new Date(WEEK_START+'T00:00:00');
+  const last7 = S.days30.filter(d=>{
+    const dd = new Date(d.d+'T00:00:00');
+    return dd >= new Date(ws.getTime()-7*864e5) && dd < ws;
+  });
+  const counted = last7.filter(d=>!d.flow_day);
+  const anchorDays = counted.filter(d=>ANCHORS.filter(a=>(d.anchors||{})[a.id]).length>=3).length;
+  const flowDays = last7.filter(d=>d.flow_day).length;
+  const pct = counted.length ? Math.round(anchorDays/counted.length*100) : 0;
+  const perAnchor = {};
+  ANCHORS.forEach(a=>{ perAnchor[a.id] = counted.filter(d=>(d.anchors||{})[a.id]).length; });
+  return {ws, counted:counted.length, anchorDays, flowDays, pct, perAnchor};
+}
+
+function renderWeek(){
+  const {ws, counted, anchorDays, flowDays, pct} = weekNumbers();
+  const we = new Date(ws.getTime()+6*864e5);
+  $('#weekLabel').textContent = `${ws.getDate()} ${TRMON[ws.getMonth()]} – ${we.getDate()} ${TRMON[we.getMonth()]}`;
+  $('#weekStats').innerHTML = `
+    <div class="stat"><div class="n">${anchorDays}/${counted||0}</div><div class="k">3+ çapalı gün</div></div>
+    <div class="stat"><div class="n" style="color:${pct>=70?'var(--ok)':'var(--acc)'}">%${pct}</div><div class="k">hedef %70</div></div>
+    <div class="stat"><div class="n">${flowDays}</div><div class="k">akış günü</div></div>`;
+
+  $('#wWin').value = S.week.win||''; $('#wDrag').value = S.week.drag||'';
+
+  $('#commitEditor').innerHTML = S.areas.map((a,i)=>`
+    <div style="margin-bottom:8px">
+      <div class="tiny" style="margin-bottom:4px">${esc(a.name)}</div>
+      <input type="text" data-ci="${i}" value="${esc((S.week.commitments[i]||{}).text||'')}" placeholder="Bu hafta ${esc(a.name.toLowerCase())} için tek somut adım">
+    </div>`).join('');
+
+  $('#rituals').innerHTML = RITUALS.map(r=>{
+    const v = (S.week.rituals||{})[r.id]||0;
+    return `<div class="row"><div class="lab">${r.label}</div>
+      <div class="flex"><button class="btn sm" data-r="${r.id}" data-v="-1">−</button>
+      <b style="min-width:34px;text-align:center;color:${v>=r.n?'var(--ok)':'var(--dim)'}">${v}/${r.n}</b>
+      <button class="btn sm" data-r="${r.id}" data-v="1">+</button></div></div>`;
+  }).join('');
+
+  $('#moodRow').innerHTML = [1,2,3,4,5].map(v=>
+    `<button class="btn sm ${S.week.energy===v?'p':''}" data-e="${v}">${['😵','😕','😐','🙂','✨'][v-1]}</button>`).join('');
+
+  $('#weekClosedTxt').textContent = S.week.closed ? '✓ Bu hafta kapatıldı. Görüşürüz pazar.' : '';
+
+  $('#weekHistory').innerHTML = (S.weeks||[]).length
+    ? S.weeks.map(w=>{
+        const dt = new Date(w.week_start+'T00:00:00');
+        const done = (w.commitments||[]).filter(c=>c.done&&c.text).length;
+        const tot  = (w.commitments||[]).filter(c=>c.text).length;
+        return `<div class="row"><div class="lab"><b>${dt.getDate()} ${TRMON[dt.getMonth()]}</b> — ${esc(w.win||'—')}</div><span class="tag">${done}/${tot||0}</span></div>`;
+      }).join('')
+    : 'Henüz kapanmış hafta yok.';
+}
+
+function renderYol(){
+  $('#monthLabel').textContent = `${TRMON[TODAY.getMonth()]} ${TODAY.getFullYear()}`;
+  $('#mTheme').value = S.month.theme||'';
+  $('#mReview').value = S.month.review||'';
+  $('#monthGoals').innerHTML = S.areas.map((a,i)=>{
+    const g = S.month.goals[i]||{text:'',done:false};
+    return `<div style="margin-bottom:10px">
+      <div class="flex" style="margin-bottom:4px"><div class="chk ${g.done?'on':''}" data-gi="${i}">✓</div><span class="tiny">${esc(a.name)}</span></div>
+      <input type="text" data-mg="${i}" value="${esc(g.text||'')}" placeholder="${esc(a.name)} — bu ayın tek hedefi">
+    </div>`;
+  }).join('');
+  $('#areasBox').innerHTML = S.areas.map(a=>
+    `<div class="area-card ${a.id}"><div class="nm">${esc(a.name)}</div><div class="tiny">${esc(a.why||'')}</div></div>`).join('');
+
+  $('#cYear').value = S.compass.yearText || '';
+  $('#cQuarter').value = S.compass.quarterText || '';
+  $('#cQLabel').textContent = quarterOf(TODAY);
+
+  const t0 = new Date(iso(TODAY)+'T00:00:00').getTime();
+  const hz = [...(S.compass.horizon||[])].sort((a,b)=>a.when.localeCompare(b.when));
+  $('#timeline').innerHTML = hz.length ? hz.map((m,i)=>{
+    const dt = new Date(m.when+'T00:00:00');
+    const diff = Math.ceil((dt.getTime()-t0)/864e5);
+    const cls = diff<0 ? 'past' : (diff<=30 ? 'now' : '');
+    const when = diff<0 ? 'geçti' : (diff===0 ? 'bugün' : (diff<45 ? diff+' gün' : Math.round(diff/30)+' ay'));
+    return `<div class="tl-item ${cls}"><div class="w">${esc(m.what)} <span class="tag">${when}</span>
+        <button class="btn sm g" data-msdel="${i}" style="float:right;padding:2px 8px">×</button></div>
+      <div class="n">${dt.getDate()} ${TRMON[dt.getMonth()]} ${dt.getFullYear()}</div></div>`;
+  }).join('') : '<div class="muted">Henüz kilometre taşı yok. Aşağıdan ekle — yıllar sonrası da olabilir.</div>';
+
+  const past = (S.months||[]).filter(m=>m.ym < YM);
+  $('#monthHistory').innerHTML = past.length ? past.map(m=>{
+    const [y,mo] = m.ym.split('-');
+    const done = (m.goals||[]).filter(g=>g.done).length, tot = (m.goals||[]).filter(g=>g.text).length;
+    return `<details><summary>${TRMON[+mo-1]} ${y} — ${esc((m.theme||'tema yazılmamış').slice(0,60))}
+        <span class="tag">${done}/${tot||0}</span></summary>
+      <div class="tiny" style="line-height:1.7">${(m.goals||[]).filter(g=>g.text)
+        .map(g=>`${g.done?'✓':'·'} ${esc(g.text)}`).join('<br>')}
+      ${m.review?`<div style="margin-top:6px;color:var(--dim)">${esc(m.review)}</div>`:''}</div></details>`;
+  }).join('') : 'Henüz kapanmış ay yok. İlk ay sonunda burada birikmeye başlar.';
+
+  $('#catSegs').innerHTML = CATS.map(([c,l])=>{
+    const list = S.tasks.filter(t=>t.category===c);
+    const d = list.filter(t=>t.done).length;
+    return `<button data-cat="${c}" class="${CAT===c?'on':''}">${l} <span class="tiny">${d}/${list.length}</span></button>`;
+  }).join('');
+  const list = S.tasks.filter(t=>t.category===CAT);
+  $('#gPct').textContent = list.length ? `${list.filter(t=>t.done).length}/${list.length} tamam` : '';
+  $('#taskList').innerHTML = list.length ? list.map(t=>`
+    <div class="task ${t.done?'done':''}">
+      <div class="chk ${t.done?'on':''}" data-task="${esc(t.id)}">✓</div>
+      <div style="flex:1"><div class="ph">${esc(t.phase_label)}</div><div class="ds">${esc(t.description)}</div></div>
+    </div>`).join('') : 'Bu kategoride madde yok.';
+
+  const total = S.debts.reduce((s,x)=>s+Number(x.amount||0),0);
+  const minSum = S.debts.reduce((s,x)=>s+Number(x.min_payment||0),0);
+  $('#debtStats').innerHTML = `
+    <div class="stat"><div class="n">${fmtTL(total)}</div><div class="k">kalan toplam</div></div>
+    <div class="stat"><div class="n">${fmtTL(minSum)}</div><div class="k">aylık minimum</div></div>
+    <div class="stat"><div class="n">${S.debts.length}</div><div class="k">kalem</div></div>`;
+  const p = Math.min(100,Math.round(Math.max(0,DEBT_START-total)/DEBT_START*100));
+  $('#debtBar').style.width = p+'%';
+  $('#debtNote').textContent = total
+    ? `Başlangıç ~${fmtTL(DEBT_START)} kabul edildi. %${p} kapandı. Aylık ${fmtTL(minSum)} minimumla kabaca ${minSum?Math.ceil(total/minSum):'—'} ay.`
+    : 'Defter\'de kayıtlı borç görünmüyor.';
+}
+
+function renderPark(){
+  if(!S.park.length){ $('#parkList').textContent='Park boş. İyi bir şey — ya da henüz hiçbir şey yazmadın.'; return; }
+  $('#parkList').innerHTML = S.park.map(p=>{
+    const days = Math.floor((Date.now()-new Date(p.created_at).getTime())/864e5);
+    const ready = days>=30;
+    return `<div class="park-item">
+      <div style="flex:1"><div>${esc(p.text)}</div>
+      <div class="tiny">${esc(p.kind)} · ${days} gündür burada</div></div>
+      <span class="badge ${ready?'ready':''}">${ready?'30 gün doldu':days+'/30'}</span>
+      <button class="btn sm g" data-del="${p.id}">×</button>
+    </div>`;
+  }).join('');
+}
+
+/* ---------- etkileşim (tek delegasyon) ---------- */
+document.addEventListener('click', async e=>{
+  const d = e.target.dataset; if(!d) return;
+
+  if(d.anchor){ S.day.anchors=S.day.anchors||{}; S.day.anchors[d.anchor]=!S.day.anchors[d.anchor]; saveDay(); renderToday(); return; }
+  if(d.su){ const v=+d.su; S.day.anchors=S.day.anchors||{}; S.day.anchors.su=(S.day.anchors.su===v)?v-1:v; saveDay(); renderToday(); return; }
+  if(d.c!==undefined){ S.week.commitments[d.c].done=!S.week.commitments[d.c].done; saveWeek(); renderToday(); renderWeek(); return; }
+  if(d.r){ S.week.rituals=S.week.rituals||{}; S.week.rituals[d.r]=Math.max(0,(S.week.rituals[d.r]||0)+(+d.v)); saveWeek(); renderWeek(); return; }
+  if(d.e){ S.week.energy=+d.e; saveWeek(); renderWeek(); return; }
+  if(d.gi!==undefined){ const i=+d.gi; S.month.goals[i]=S.month.goals[i]||{area:S.areas[i].id,text:''};
+    S.month.goals[i].done=!S.month.goals[i].done; saveMonth(); renderYol(); return; }
+  if(d.cat){ CAT=d.cat; renderYol(); return; }
+  if(d.msdel!==undefined){
+    const hz=[...(S.compass.horizon||[])].sort((a,b)=>a.when.localeCompare(b.when));
+    hz.splice(+d.msdel,1); S.compass.horizon=hz; saveCompass(); renderYol(); return;
+  }
+  if(d.acceptMonth!==undefined){
+    const r = MONTH_AI_LAST; if(!r) return;
+    if(d.acceptMonth==='review'){ S.month.review = r.review; $('#mReview').value = r.review; saveMonth(); }
+    flashSaved(); return;
+  }
+  if(d.task){
+    const t=S.tasks.find(x=>String(x.id)===String(d.task)); if(!t) return;
+    t.done=!t.done; renderYol(); await DB.setTask(t.id,t.done); flashSaved(); return;
+  }
+  if(d.del){
+    await DB.delPark(d.del);
+    S.park = S.park.filter(p=>String(p.id)!==String(d.del)); renderPark(); flashSaved(); return;
+  }
+  if(d.accept!==undefined){
+    const i=+d.accept, sug = AI_LAST && AI_LAST.commitments[i]; if(!sug) return;
+    const idx = S.areas.findIndex(a=>a.id===sug.area);
+    const slot = idx>=0 ? idx : i;
+    S.week.commitments[slot] = {area:S.areas[slot].id, text:sug.text, done:false};
+    saveWeek(); renderWeek(); renderToday(); flashSaved(); return;
+  }
+});
+document.addEventListener('input', e=>{
+  const d = e.target.dataset;
+  if(d && d.ci!==undefined){ const i=+d.ci;
+    S.week.commitments[i]=S.week.commitments[i]||{area:S.areas[i].id,done:false};
+    S.week.commitments[i].text=e.target.value; S.week.commitments[i].area=S.areas[i].id; saveWeek(); return; }
+  if(d && d.mg!==undefined){ const i=+d.mg;
+    S.month.goals[i]=S.month.goals[i]||{area:S.areas[i].id,done:false};
+    S.month.goals[i].text=e.target.value; S.month.goals[i].area=S.areas[i].id; saveMonth(); return; }
+});
+$('#flowBtn').onclick = ()=>{ S.day.flow_day=!S.day.flow_day; saveDay(); renderToday(); };
+$('#dayNote').oninput = e=>{ S.day.note=e.target.value; saveDay(); };
+$('#wWin').oninput  = e=>{ S.week.win=e.target.value; saveWeek(); };
+$('#wDrag').oninput = e=>{ S.week.drag=e.target.value; saveWeek(); };
+$('#mTheme').oninput  = e=>{ S.month.theme=e.target.value; saveMonth(); renderToday(); };
+$('#mReview').oninput = e=>{ S.month.review=e.target.value; saveMonth(); };
+$('#closeWeek').onclick = ()=>{ S.week.closed=true; saveWeek(); renderWeek(); };
+$('#parkAdd').onclick = async ()=>{
+  const t=$('#parkInput').value.trim(); if(!t) return;
+  const row = await DB.addPark(t,$('#parkKind').value);
+  if(row) S.park.unshift(row);
+  $('#parkInput').value=''; renderPark(); flashSaved();
+};
+$('#parkInput').onkeydown = e=>{ if(e.key==='Enter') $('#parkAdd').click(); };
+$('#cYear').oninput = e=>{ S.compass.yearText=e.target.value; saveCompass(); };
+$('#cQuarter').oninput = e=>{ S.compass.quarterText=e.target.value; saveCompass(); };
+$('#msAdd').onclick = ()=>{
+  const when=$('#msWhen').value, what=$('#msWhat').value.trim();
+  if(!when||!what) return;
+  S.compass.horizon=[...(S.compass.horizon||[]), {when, what}];
+  $('#msWhen').value=''; $('#msWhat').value='';
+  saveCompass(); renderYol(); flashSaved();
+};
+
+/* ---------- Ay kapanışı ---------- */
+let MONTH_AI_LAST = null;
+function localMonthReview(){
+  const goals = (S.month.goals||[]).filter(g=>g.text);
+  const done = goals.filter(g=>g.done).length;
+  const counted = S.days30.filter(d=>!d.flow_day);
+  const good = counted.filter(d=>ANCHORS.filter(a=>(d.anchors||{})[a.id]).length>=3).length;
+  const pct = counted.length ? Math.round(good/counted.length*100) : 0;
+  return {
+    review: `Bu ay ${goals.length} hedeften ${done}'i tamamlandı. Son 30 günün sayılan ${counted.length} gününde ` +
+      `çapa oranı %${pct} (hedef %70).` + (S.month.theme?` Tema: ${S.month.theme}`:''),
+    next_theme: S.compass.quarterText || '',
+    next_goals: S.areas.map((a,i)=>{
+      const g=(S.month.goals||[])[i];
+      return {area:a.id, text: g && g.text && !g.done ? g.text : `${a.name} için gelecek ayın tek hedefi`};
+    }),
+    watch: pct>=70 ? 'Sistem dönüyor; bir sonraki ay aynı tempoyu koru.' : 'Çapa oranı hedefin altında — hedefi değil, çapaların kendisini küçült.',
+    local:true
+  };
+}
+$('#monthAiBtn').onclick = async ()=>{
+  const btn=$('#monthAiBtn'); btn.disabled=true;
+  $('#monthAiOut').innerHTML = `<div class="ai"><span class="spin"></span>Ayı okuyor…</div>`;
+  const payload = {
+    ay: S.month, alanlar: S.areas, pusula: S.compass,
+    gecmis_aylar: (S.months||[]).slice(0,6).map(m=>({ym:m.ym, tema:m.theme, review:m.review})),
+    haftalar: (S.weeks||[]).map(w=>({week:w.week_start, win:w.win, drag:w.drag, energy:w.energy,
+      taahhut: (w.commitments||[]).filter(c=>c.text).map(c=>({text:c.text, done:c.done}))})),
+    checklist: S.tasks.map(t=>({kategori:t.category, madde:t.phase_label, bitti:t.done}))
+  };
+  let r;
+  try{ r = await DB.ai(payload,'monthly'); }
+  catch(err){ r = localMonthReview(); r._note = err.message; }
+  MONTH_AI_LAST = r;
+  $('#monthAiOut').innerHTML = `<div class="ai">
+    <h4>Ay kapanışı${r.demo?' · demo':(r.local?' · yerel':'')}</h4>
+    <p>${esc(r.review)}</p>
+    <button class="btn sm" data-accept-month="review">Ay notuna yaz</button>
+    ${r.next_theme?`<h4 style="margin-top:12px">Gelecek ay için tema önerisi</h4>
+      <p class="muted">${esc(r.next_theme)}</p>`:''}
+    ${(r.next_goals||[]).length?`<h4 style="margin-top:12px">Gelecek ayın hedefleri</h4>
+      ${r.next_goals.map(g=>{const a=S.areas.find(x=>x.id===g.area);
+        return `<div class="sug"><span class="tag ${esc(g.area)}">${esc(a?a.name:g.area)}</span> ${esc(g.text)}</div>`;
+      }).join('')}
+      <p class="tiny">Yeni ay başladığında Ay kartına elinle geçir — sistem seni acele ettirmesin.</p>`:''}
+    ${r.watch?`<p class="tiny" style="color:var(--acc)">⚠ ${esc(r.watch)}</p>`:''}
+    ${r.local?`<p class="tiny">Koltuk'un kendi kurallarıyla yazıldı — model bağlı değil.</p>`:''}
+  </div>`;
+  btn.disabled=false;
+};
+
+/* ---------- Yerel check-in (model bağlı değilse) ----------
+   Aynı çıktıyı kurallarla üretir. Hiçbir servise ihtiyaç duymaz,
+   hiçbir şeye para ödemez; AI sadece bunu daha iyi yazar. */
+function localCheckIn(n){
+  const done = (S.week.commitments||[]).filter(c=>c.text&&c.done).length;
+  const written = (S.week.commitments||[]).filter(c=>c.text).length;
+  const parts = [];
+  if(n.counted===0) parts.push('Geçen hafta hiç gün işaretlenmemiş — sistem değil, kayıt eksik.');
+  else parts.push(`Geçen hafta sayılan ${n.counted} günün ${n.anchorDays}'inde en az üç çapa tuttu: %${n.pct}.` +
+    (n.pct>=70 ? ' Hedefin üstünde.' : ' Hedef %70, bu hafta altında kalmış.'));
+  if(n.flowDays) parts.push(`${n.flowDays} akış günü var, o günler zaten sayılmadı.`);
+  if(written) parts.push(`Yazdığın ${written} taahhüdün ${done}'i tamam.`);
+
+  const weakest = ANCHORS.map(a=>({a, v:n.perAnchor[a.id]||0})).sort((x,y)=>x.v-y.v)[0];
+  const watch = n.counted
+    ? `En çok aksayan çapa: ${weakest.a.label.replace(/^\S+\s/,'').split('—')[0].trim()} (${weakest.v}/${n.counted}). Üst üste tutmuyorsa saatini değiştir ya da bu dönem listeden çıkar.`
+    : 'Bu hafta veri yok; tek yapman gereken günleri işaretlemeye devam etmek.';
+
+  const commitments = S.areas.map((a,i)=>{
+    const prev = (S.week.commitments||[])[i];
+    if(prev && prev.text && !prev.done) return {area:a.id, text:prev.text};
+    const goal = (S.month.goals||[])[i];
+    return {area:a.id, text: goal && goal.text ? goal.text : `${a.name} için bu hafta tek somut adım`};
+  });
+
+  return {
+    summary: parts.join(' '),
+    watch,
+    commitments,
+    no_sentence: S.month.theme
+      ? `Bu ay "${S.month.theme.split('.')[0].trim()}" dedim, buna sığmıyor — sonra tekrar konuşalım.`
+      : 'Bu ay söz verdiğim şeylere sığmıyor — sonra tekrar konuşalım.',
+    local: true
+  };
+}
+
+/* ---------- AI check-in ---------- */
+let AI_LAST = null;
+$('#aiBtn').onclick = async ()=>{
+  const btn = $('#aiBtn'); btn.disabled = true;
+  $('#aiOut').innerHTML = `<div class="ai"><span class="spin"></span>Haftana bakıyor…</div>`;
+  const n = weekNumbers();
+  const payload = {
+    bugun: iso(TODAY),
+    alanlar: S.areas,
+    ay: {tema:S.month.theme, hedefler:S.month.goals},
+    gecen_hafta: {
+      sayilan_gun:n.counted, uc_capa_tutan_gun:n.anchorDays, yuzde:n.pct,
+      akis_gunu:n.flowDays, capa_bazinda:n.perAnchor,
+      taahhutler:S.week.commitments, kazanim:S.week.win, takilma:S.week.drag,
+      enerji:S.week.energy, ritueller:S.week.rituals
+    },
+    park: S.park.map(p=>({text:p.text, kind:p.kind,
+      gun:Math.floor((Date.now()-new Date(p.created_at).getTime())/864e5)})),
+    checklist: S.tasks.map(t=>({kategori:t.category, madde:t.phase_label, bitti:t.done})),
+    borc: {toplam:S.debts.reduce((s,x)=>s+Number(x.amount||0),0),
+           aylik_min:S.debts.reduce((s,x)=>s+Number(x.min_payment||0),0)},
+    pusula: {yil:S.compass.yearText, ceyrek:S.compass.quarterText},
+    takvim: (S.compass.horizon||[])
+  };
+  let r;
+  try{
+    r = await DB.ai(payload);
+  }catch(err){
+    r = localCheckIn(n);
+    r._note = err.message;
+  }
+  {
+    AI_LAST = r;
+    $('#aiOut').innerHTML = `<div class="ai">
+      <h4>Haftanın okuması${r.demo?' · demo':(r.local?' · yerel':'')}</h4>
+      <p>${esc(r.summary)}</p>
+      ${r.watch?`<p class="tiny" style="color:var(--acc)">⚠ ${esc(r.watch)}</p>`:''}
+      <h4 style="margin-top:12px">Önerilen taahhütler</h4>
+      ${(r.commitments||[]).map((c,i)=>{
+        const a=S.areas.find(x=>x.id===c.area);
+        return `<div class="sug"><div class="flex" style="justify-content:space-between">
+          <div><span class="tag ${esc(c.area)}">${esc(a?a.name:c.area)}</span> ${esc(c.text)}</div>
+          <button class="btn sm" data-accept="${i}">Kabul et</button></div></div>`;
+      }).join('')}
+      ${r.no_sentence?`<h4 style="margin-top:12px">Hayır cümlesi</h4><p class="muted">"${esc(r.no_sentence)}"</p>`:''}
+      ${r.local?`<p class="tiny" style="margin-top:12px">Bu özet Koltuk'un kendi kurallarıyla yazıldı — model bağlı değil.
+        ${r._note?`<br><span style="opacity:.7">${esc(r._note)}</span>`:''}</p>`:''}
+    </div>`;
+  }
+  btn.disabled = false;
+};
+
+/* ---------- giriş kapısı ---------- */
+function start(){
+  $('#gate').classList.add('hidden');
+  $('#app').classList.remove('hidden');
+  if(!DEMO) $('#signOut').classList.remove('hidden');
+  load().then(()=>{ if(TODAY.getDay()===0 && !S.week.closed) setTab('pazar'); else setTab('bugun'); })
+    .catch(err=>{ $('#app').insertAdjacentHTML('beforeend',
+      `<div class="card" style="border-color:var(--warn)"><b>Bağlantı hatası</b><div class="tiny">${esc(err.message)}</div></div>`); });
+}
+function showGate(msg){
+  $('#gate').classList.remove('hidden');
+  $('#app').classList.add('hidden');
+  if(msg) $('#gMsg').textContent = msg;
+}
+async function auth(kind){
+  const email=$('#gEmail').value.trim(), password=$('#gPass').value;
+  if(!email||!password){ $('#gMsg').textContent='E-posta ve şifre gerekli.'; return; }
+  $('#gIn').disabled=$('#gUp').disabled=true; $('#gMsg').textContent='…';
+  const fn = kind==='up' ? DB.sb.auth.signUp({email,password}) : DB.sb.auth.signInWithPassword({email,password});
+  const {data,error} = await fn;
+  $('#gIn').disabled=$('#gUp').disabled=false;
+  if(error){ $('#gMsg').textContent = error.message; return; }
+  if(data.session) start();
+  else $('#gMsg').textContent = 'Hesap oluşturuldu. E-postanı doğruladıktan sonra giriş yap.';
+}
+
+if(DEMO){ start(); }
+else {
+  $('#gIn').onclick = ()=>auth('in');
+  $('#gUp').onclick = ()=>auth('up');
+  $('#gPass').onkeydown = e=>{ if(e.key==='Enter') auth('in'); };
+  $('#signOut').onclick = async ()=>{ await DB.sb.auth.signOut(); location.reload(); };
+  const {data:{session}} = await DB.sb.auth.getSession();
+  if(session) start(); else showGate('');
+}
+</script>
+</body>
+</html>
