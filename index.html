@@ -48,7 +48,8 @@
   .stat{background:var(--panel2);border-radius:11px;padding:12px 14px}
   .stat .n{font-size:24px;font-weight:600;letter-spacing:-.5px}
   .stat .k{font-size:11.5px;color:var(--faint);margin-top:2px}
-  input[type=text],input[type=number],textarea,select{width:100%;background:var(--panel2);border:1px solid var(--line);
+  input[type=text],input[type=number],input[type=email],input[type=password],input[type=date],
+  textarea,select{width:100%;background:var(--panel2);border:1px solid var(--line);
     color:var(--ink);border-radius:9px;padding:10px 12px;font:inherit;font-size:14px}
   textarea{resize:vertical;min-height:64px}
   input:focus,textarea:focus,select:focus{outline:none;border-color:var(--acc)}
@@ -87,6 +88,19 @@
   .gate-box{width:100%;max-width:360px;background:var(--panel);border:1px solid var(--line);
     border-radius:var(--r);padding:24px}
   .gate-box h1{font-size:24px}
+  .menu-day{background:var(--panel2);border-radius:11px;padding:11px 13px;margin-bottom:8px;
+    border-left:3px solid var(--line)}
+  .menu-day.now{border-left-color:var(--acc)}
+  .md-head{margin-bottom:7px}
+  .md-row{display:flex;align-items:center;gap:9px;margin-bottom:5px}
+  .md-row:last-child{margin-bottom:0}
+  .md-lab{flex:0 0 42px}
+  .md-row select{flex:1;padding:6px 9px;font-size:13px}
+  details.shop{margin-top:10px;background:var(--panel2);border-radius:11px;padding:10px 13px}
+  details.shop summary{color:var(--acc);font-weight:600}
+  details.meal{padding:7px 0;border-bottom:1px solid var(--line)}
+  details.meal:last-child{border-bottom:0}
+  details.meal summary{color:var(--ink);font-size:14px}
   .signout{background:none;border:0;color:var(--faint);font:inherit;font-size:12px;cursor:pointer;padding:0}
   .signout:hover{color:var(--dim)}
   .save{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--panel2);
@@ -183,6 +197,11 @@
       <div id="weekCommitToday"></div>
     </div>
 
+    <div class="card" id="todayMenuCard">
+      <h2>Bugün ne yiyorum<span class="hint" id="todayMenuHint"></span></h2>
+      <div id="todayMenu" class="muted">—</div>
+    </div>
+
     <div class="card">
       <h2>Bugüne bir cümle</h2>
       <textarea id="dayNote" placeholder="Nasıldı? Tek satır yeter."></textarea>
@@ -216,6 +235,12 @@
       <div style="height:12px"></div>
       <div class="tiny" style="margin-bottom:6px">Enerji</div>
       <div class="flex" id="moodRow"></div>
+    </div>
+
+    <div class="card">
+      <h2>Haftanın menüsü<span class="hint">check-in'in son adımı</span></h2>
+      <div class="muted" id="menuSummary">—</div>
+      <div style="margin-top:10px"><button class="btn sm" data-goto="mutfak">Mutfak'ı aç</button></div>
     </div>
 
     <div class="card">
@@ -300,6 +325,29 @@
     </div>
   </section>
 
+  <!-- ============ MUTFAK ============ -->
+  <section id="tab-mutfak" class="hidden">
+    <div class="card">
+      <h2>Haftanın menüsü<span class="hint" id="menuHint"></span></h2>
+      <div class="flex" style="margin-bottom:12px">
+        <button class="btn p" id="menuBuild">🍽 Haftayı kur</button>
+        <button class="btn sm" id="menuShop">Alışveriş listesini çıkar</button>
+      </div>
+      <div class="tiny" style="margin-bottom:12px;line-height:1.7">
+        Kurallar: hafta içi hızlı yemek · fırın günü ertesi öğle artıktan ·
+        pazar akşamı hazırlık, pazartesi–salı öğlenleri ondan · hazırlık tarifi başka güne düşmez.
+      </div>
+      <div id="menuGrid"></div>
+      <div id="menuShopOut"></div>
+    </div>
+
+    <div class="card">
+      <h2>Tarif havuzu<span class="hint" id="poolHint"></span></h2>
+      <div class="segs" id="poolSegs"></div>
+      <div id="poolList" class="muted">—</div>
+    </div>
+  </section>
+
   <!-- ============ PARK ============ -->
   <section id="tab-park" class="hidden">
     <div class="card">
@@ -372,7 +420,8 @@ const DEFAULT_AREAS = [
   {id:'a2', name:'Geçiş', why:'Ekim: yeni işe hazırlık ve giriş. Kasım–Mart: işte oturma. Design Nisan 2027\'de başlıyor.'},
   {id:'a3', name:'Beden', why:'Hareket, uyku, cilt, su. Diğer iki alanın yakıtı. Zorlamadan, çapalarla.'}
 ];
-const TABS = [['bugun','Bugün'],['pazar','Pazar'],['yol','Yol'],['park','Park']];
+const TABS = [['bugun','Bugün'],['pazar','Pazar'],['yol','Yol'],['mutfak','Mutfak'],['park','Park']];
+let POOL_SLOT = 'aksam';
 const CATS = [['yeniis','Yeni iş'],['faz0','Faz 0'],['design_nisan','Design · Nisan 2027']];
 const DEFAULT_COMPASS = {
   yearText:'', quarterText:'',
@@ -413,7 +462,7 @@ async function makeSupabaseDB(){
     },
     async load(){
       const since = iso(new Date(TODAY.getTime()-34*864e5));
-      const [day, week, month, areas, park, days30, debts, weeks, tasks, months] = await Promise.all([
+      const [day, week, month, areas, park, days30, debts, weeks, tasks, months, recipes, menu] = await Promise.all([
         sb.from('koltuk_days').select('*').eq('d',iso(TODAY)).maybeSingle(),
         sb.from('koltuk_weeks').select('*').eq('week_start',WEEK_START).maybeSingle(),
         sb.from('koltuk_months').select('*').eq('ym',YM).maybeSingle(),
@@ -423,7 +472,9 @@ async function makeSupabaseDB(){
         sb.from('fin_debts').select('*'),
         sb.from('koltuk_weeks').select('*').order('week_start',{ascending:false}).limit(8),
         sb.from('design_tasks').select('*').order('order_index',{ascending:true}),
-        sb.from('koltuk_months').select('*').order('ym',{ascending:false}).limit(24)
+        sb.from('koltuk_months').select('*').order('ym',{ascending:false}).limit(24),
+        sb.from('menu_recipes').select('*').eq('active',true),
+        sb.from('menu_weeks').select('*').eq('week_start',WEEK_START).maybeSingle()
       ]);
       const setting = k => (areas.data||[]).find(r=>r.key===k);
       return {
@@ -431,10 +482,24 @@ async function makeSupabaseDB(){
         areas:(setting('areas')||{}).value||null,
         compass:(setting('compass')||{}).value||null,
         park:park.data||[], days30:days30.data||[], debts:debts.data||[],
-        weeks:weeks.data||[], tasks:tasks.data||[], months:months.data||[]
+        weeks:weeks.data||[], tasks:tasks.data||[], months:months.data||[],
+        recipes:recipes.data||[], menu:menu.data||null
       };
     },
     saveCompass: v => sb.from('koltuk_settings').upsert({key:'compass', value:v, updated_at:new Date().toISOString()}),
+    async saveMenu(m){
+      if(m.id){
+        const {error} = await sb.from('menu_weeks')
+          .update({plan:m.plan, shopping:m.shopping, note:m.note}).eq('id',m.id);
+        if(error) throw error;
+        return m;
+      }
+      const {data,error} = await sb.from('menu_weeks')
+        .insert({week_start:m.week_start, plan:m.plan, shopping:m.shopping, note:m.note})
+        .select().maybeSingle();
+      if(error) throw error;
+      return data || m;
+    },
     saveDay: d => sb.from('koltuk_days').upsert({...d, updated_at:new Date().toISOString()}),
     saveWeek: w => sb.from('koltuk_weeks').upsert({...w, updated_at:new Date().toISOString()}),
     saveMonth: m => sb.from('koltuk_months').upsert({...m, updated_at:new Date().toISOString()}),
@@ -489,6 +554,30 @@ async function makeDemoDB(){
         {when:'2028-01-01', what:'Ev peşinatı birikimine geç'}
       ]
     },
+    recipes:[
+      {id:'S1',slot:'sabah',name:'Omlet + peynir + domates',minutes:7,protein_g:32,tags:['hizli'],active:true,
+       steps:'4 yumurtayı çırp, az yağlı tavada orta ateşte pişir, peyniri son 30 saniyede içine at.',
+       ingredients:[{item:'Yumurta',qty:4,unit:'adet',aisle:'market'},{item:'Beyaz peynir',qty:80,unit:'g',aisle:'market'},{item:'Domates',qty:2,unit:'adet',aisle:'manav'}]},
+      {id:'S2',slot:'sabah',name:'Süzme yoğurt kâsesi',minutes:2,protein_g:28,tags:['hizli','pisirmesiz'],active:true,
+       steps:'Süzme yoğurt, ceviz, tarçın.',ingredients:[{item:'Süzme yoğurt',qty:300,unit:'g',aisle:'market'},{item:'Ceviz içi',qty:30,unit:'g',aisle:'market'}]},
+      {id:'S5',slot:'sabah',name:'Yulaflı yumurtalı pancake',minutes:12,protein_g:30,tags:['haftasonu'],active:true,
+       steps:'Yulaf, yumurta, muz; tavada iki tarafını pişir.',ingredients:[{item:'Yulaf',qty:60,unit:'g',aisle:'market'},{item:'Yumurta',qty:3,unit:'adet',aisle:'market'}]},
+      {id:'O2',slot:'ogle',name:'Dünden kalan tavuk + salata',minutes:5,protein_g:40,tags:['hizli','pisirmesiz','artiktan'],active:true,
+       steps:'Dün akşamdan ayırdığın tavuğu doğra, salatanın üstüne koy.',ingredients:[{item:'Marul veya roka',qty:1,unit:'adet',aisle:'manav'},{item:'Domates',qty:2,unit:'adet',aisle:'manav'}]},
+      {id:'O3',slot:'ogle',name:'Ton balıklı salata',minutes:7,protein_g:40,tags:['hizli','pisirmesiz'],active:true,
+       steps:'Ton balığını süz, salatayla karıştır, limon-zeytinyağı.',ingredients:[{item:'Ton balığı (suda)',qty:2,unit:'kutu',aisle:'market'},{item:'Salatalık',qty:2,unit:'adet',aisle:'manav'}]},
+      {id:'O5',slot:'ogle',name:'Hazır tavuk kâsesi',minutes:3,protein_g:45,tags:['hizli','hazirliktan'],active:true,
+       steps:'Pazar hazırlığından kalan tavuk + bulgur + yeşillik.',ingredients:[{item:'Bulgur',qty:80,unit:'g',aisle:'market'}]},
+      {id:'A1',slot:'aksam',name:'Fırında tavuk + brokoli',minutes:35,protein_g:40,tags:['firin','artikverir'],active:true,
+       steps:'200°C 25 dk. Tavuğun üçte birini ayır — yarın öğle.',
+       ingredients:[{item:'Tavuk göğsü',qty:600,unit:'g',aisle:'kasap'},{item:'Brokoli',qty:1,unit:'adet',aisle:'manav'},{item:'Limon',qty:1,unit:'adet',aisle:'manav'}]},
+      {id:'A6',slot:'aksam',name:'Ton balıklı sebze',minutes:15,protein_g:35,tags:['hizli','tencere'],active:true,
+       steps:'Sebzeleri sotele, ton balığını son ekle.',ingredients:[{item:'Ton balığı (suda)',qty:2,unit:'kutu',aisle:'market'},{item:'Kabak',qty:2,unit:'adet',aisle:'manav'}]},
+      {id:'A12',slot:'aksam',name:'Pazar hazırlığı',minutes:40,protein_g:0,tags:['hazirlik'],active:true,
+       steps:'1 kg tavuğu fırınla, 12 yumurta haşla. İki gün öğlenler hazır.',
+       ingredients:[{item:'Tavuk göğsü',qty:1000,unit:'g',aisle:'kasap'},{item:'Yumurta',qty:12,unit:'adet',aisle:'market'}]}
+    ],
+    menu:null,
     months:[
       {ym:'2026-08', theme:'Borçları büyütmeden, ana oda toplama ayı.', goals:[{text:'x',done:true},{text:'y',done:false}], review:'Eylülde: borç, design, hareket.'}
     ],
@@ -520,6 +609,7 @@ async function makeDemoDB(){
   return {
     async load(){ await wait(120); return JSON.parse(JSON.stringify(state)); },
     async saveDay(){}, async saveWeek(){}, async saveMonth(){}, async saveCompass(){},
+    async saveMenu(m){ return m; },
     async addPark(text,kind){ return {id:Date.now(),text,kind,created_at:new Date().toISOString()}; },
     async delPark(){}, async setTask(){},
     async ai(payload, mode){
@@ -550,9 +640,117 @@ async function makeDemoDB(){
   };
 }
 
+/* ================= MENÜ =================
+   Haftalık yemek planı ve alışveriş listesi. Pazar check-in'inin parçası:
+   sistem kurulurken menü de kuruluyor, ayrı bir uygulama değil. */
+const SLOTS = [['sabah','Sabah'],['ogle','Öğle'],['aksam','Akşam']];
+const has = (r,t) => (r.tags||[]).includes(t);
+
+/* hafta planı: kurallar deterministik, seçim hafif rastgele */
+function buildMenu(recipes, weekStartISO){
+  const pool = s => recipes.filter(r=>r.slot===s && r.active!==false);
+  const S = pool('sabah'), O = pool('ogle'), A = pool('aksam');
+  if(!S.length || !O.length || !A.length) return null;
+
+  const pick = (list, prefer, avoid, exclude=[]) => {
+    const legal = list.filter(r=>!exclude.some(t=>has(r,t)));
+    const usable = legal.length ? legal : list;
+    const free = usable.filter(r=>!avoid.includes(r.id));
+    const base = free.length ? free : usable;
+    for(const tag of prefer){
+      const hit = base.filter(r=>has(r,tag));
+      if(hit.length) return hit[Math.floor(Math.random()*hit.length)];
+    }
+    return base[Math.floor(Math.random()*base.length)];
+  };
+
+  const days = Array.from({length:7},(_,i)=>{
+    const d = new Date(weekStartISO+'T00:00:00'); d.setDate(d.getDate()+i); return iso(d);
+  });
+
+  const plan = [];
+  const usedA = [], usedS = [], usedO = [];
+  let prevAksam = null, prepDoneDay = -1;
+
+  for(let i=0;i<7;i++){
+    const weekend = i>=5;
+    /* akşam: pazar hazırlık günü, hafta içi hızlı/tencere, hafta sonu fırın */
+    let aksam;
+    if(i===6){
+      aksam = A.find(r=>has(r,'hazirlik')) || pick(A, ['tencere'], usedA);
+      if(has(aksam,'hazirlik')) prepDoneDay = i;
+    } else {
+      /* hazırlık tarifi sadece hazırlık gününe ait */
+      aksam = pick(A, weekend ? ['firin','artikverir'] : ['hizli','tencere'], usedA, ['hazirlik']);
+    }
+    usedA.push(aksam.id);
+
+    /* sabah: hafta içi hızlı, hafta sonu keyifli; üst üste aynısı olmasın */
+    const sabah = pick(S, weekend ? ['haftasonu'] : ['hizli','pisirmesiz'], usedS.slice(-2));
+    usedS.push(sabah.id);
+
+    /* öğle: dün akşam artık verdiyse artıktan, hazırlık yapıldıysa hazırlıktan */
+    let prefer, exclude = [];
+    const artikVar = prevAksam && has(prevAksam,'artikverir');
+    /* hazırlık pazar akşamı yapılır; faydası pazartesi ve salı öğlenlerine döner */
+    const hazirVar = i<=1 || (prepDoneDay>=0 && i-prepDoneDay>0 && i-prepDoneDay<=2);
+    if(artikVar) prefer = ['artiktan'];
+    else if(hazirVar) prefer = ['hazirliktan'];
+    else prefer = weekend ? ['pisirmesiz'] : ['hizli','pisirmesiz'];
+    /* artık/hazırlık yoksa onlara dayanan öğünler seçilemez */
+    if(!artikVar) exclude.push('artiktan');
+    if(!hazirVar) exclude.push('hazirliktan');
+    const ogle = pick(O, prefer, usedO.slice(-3), exclude);
+    usedO.push(ogle.id);
+
+    plan.push({date:days[i], sabah:sabah.id, ogle:ogle.id, aksam:aksam.id});
+    prevAksam = aksam;
+  }
+  return plan;
+}
+
+/* alışveriş: seçilen tariflerin malzemelerini toplar, reyona göre gruplar,
+   haftayı ikiye bölüp iki alışverişe ayırır (taze şeyler bayatlamasın) */
+function buildShopping(plan, recipes, splitAt=4){
+  const byId = Object.fromEntries(recipes.map(r=>[r.id,r]));
+  const trips = [[],[]];
+  plan.forEach((day,i)=>{
+    SLOTS.forEach(([s])=>{
+      const r = byId[day[s]]; if(!r) return;
+      (r.ingredients||[]).forEach(ing=>trips[i<splitAt?0:1].push(ing));
+    });
+  });
+  const fmtQty = (qty,unit) => {
+    if(unit==='g' && qty>=1000) return (qty/1000).toLocaleString('tr-TR',{maximumFractionDigits:1})+' kg';
+    return qty.toLocaleString('tr-TR',{maximumFractionDigits:1})+' '+unit;
+  };
+  const label = (from,to) => {
+    const a=new Date(plan[from].date+'T00:00:00'), b=new Date(plan[to].date+'T00:00:00');
+    return `${a.getDate()}–${b.getDate()} ${TRMON[b.getMonth()]}`;
+  };
+  const out = {};
+  trips.forEach((items,t)=>{
+    if(!items.length) return;
+    const merged = {};
+    items.forEach(ing=>{
+      const key = (ing.item||'')+'|'+(ing.unit||'')+'|'+(ing.aisle||'market');
+      merged[key] = (merged[key]||0) + (Number(ing.qty)||0);
+    });
+    const aisles = {};
+    Object.entries(merged).forEach(([key,qty])=>{
+      const [item,unit,aisle] = key.split('|');
+      (aisles[aisle] = aisles[aisle]||[]).push(`${item} ${fmtQty(qty,unit)}`);
+    });
+    Object.values(aisles).forEach(a=>a.sort((x,y)=>x.localeCompare(y,'tr')));
+    const range = t===0 ? label(0, Math.min(splitAt-1,plan.length-1)) : label(splitAt, plan.length-1);
+    out[`${t+1}. Alışveriş · ${range}`] = aisles;
+  });
+  return out;
+}
+
 /* ---------- durum ---------- */
 let S = { day:null, week:null, month:null, areas:DEFAULT_AREAS, compass:DEFAULT_COMPASS,
-          park:[], days30:[], debts:[], weeks:[], tasks:[], months:[] };
+          park:[], days30:[], debts:[], weeks:[], tasks:[], months:[], recipes:[], menu:null };
 let CAT = 'yeniis';
 const saveCompass = debounce(async()=>{ await DB.saveCompass(S.compass); flashSaved(); },700);
 function quarterOf(d){ return d.getFullYear()+'-Ç'+(Math.floor(d.getMonth()/3)+1); }
@@ -582,6 +780,8 @@ async function load(){
   if(!S.compass.horizon) S.compass.horizon = [];
   S.park = d.park; S.days30 = d.days30; S.debts = d.debts; S.weeks = d.weeks; S.tasks = d.tasks;
   S.months = d.months || [];
+  S.recipes = d.recipes || [];
+  S.menu = d.menu || {week_start:WEEK_START, plan:[], shopping:{}, note:''};
   if(!S.week.commitments || !S.week.commitments.length)
     S.week.commitments = S.areas.map(a=>({area:a.id,text:'',done:false}));
   if(!S.month.goals || !S.month.goals.length)
@@ -591,7 +791,104 @@ async function load(){
 }
 
 /* ---------- render ---------- */
-function renderAll(){ renderToday(); renderWeek(); renderYol(); renderPark(); }
+function renderAll(){ renderToday(); renderWeek(); renderMenu(); renderYol(); renderPark(); }
+
+/* ---------- menü ---------- */
+const saveMenu = debounce(async()=>{
+  try{ const saved = await DB.saveMenu(S.menu); if(saved && saved.id) S.menu.id = saved.id; flashSaved(); }
+  catch(e){ console.error(e); }
+},600);
+
+function recipeById(id){ return S.recipes.find(r=>r.id===id); }
+
+function renderMenu(){
+  if(!S.recipes.length){
+    $('#menuGrid').innerHTML = '<div class="muted">Tarif listesi boş.</div>';
+    $('#menuHint').textContent = '';
+    renderTodayMenu(); return;
+  }
+  const plan = S.menu.plan || [];
+  if(!plan.length){
+    $('#menuGrid').innerHTML = `<div class="muted">Bu hafta için menü kurulmamış. "Haftayı kur"a bas —
+      tarifleri kurallara göre dizer, sonra istediğini elle değiştirirsin.</div>`;
+    $('#menuHint').textContent = '';
+  } else {
+    const totalMin = plan.reduce((s,d)=>s+SLOTS.reduce((a,[k])=>{
+      const r=recipeById(d[k]); return a+(r?r.minutes||0:0); },0),0);
+    $('#menuHint').textContent = `haftada ~${Math.round(totalMin/60*10)/10} saat mutfak`;
+    $('#menuGrid').innerHTML = plan.map((d,i)=>{
+      const dt = new Date(d.date+'T00:00:00');
+      const mins = SLOTS.reduce((a,[k])=>{ const r=recipeById(d[k]); return a+(r?r.minutes||0:0); },0);
+      const today = d.date===iso(TODAY);
+      return `<div class="menu-day ${today?'now':''}">
+        <div class="md-head"><b>${TRDAY[dt.getDay()]}</b> <span class="tiny">${dt.getDate()} ${TRMON[dt.getMonth()]} · ${mins} dk</span></div>
+        ${SLOTS.map(([k,label])=>`
+          <div class="md-row"><span class="tiny md-lab">${label}</span>
+            <select data-menu="${i}" data-slot="${k}">
+              <option value="">—</option>
+              ${S.recipes.filter(r=>r.slot===k).map(r=>
+                `<option value="${esc(r.id)}" ${d[k]===r.id?'selected':''}>${esc(r.name)}</option>`).join('')}
+            </select></div>`).join('')}
+      </div>`;
+    }).join('');
+  }
+  renderShopping();
+  renderTodayMenu();
+  renderPool();
+
+  const plan2 = S.menu.plan || [];
+  $('#menuSummary').textContent = plan2.length
+    ? `${plan2.length} günlük menü kurulu. ${Object.keys(S.menu.shopping||{}).length} alışveriş listesi hazır.`
+    : 'Bu hafta menü kurulmamış — Mutfak sekmesinden tek tuşla kurulur.';
+}
+
+function renderPool(){
+  $('#poolSegs').innerHTML = SLOTS.map(([k,label])=>{
+    const n = S.recipes.filter(r=>r.slot===k).length;
+    return `<button data-pool="${k}" class="${POOL_SLOT===k?'on':''}">${label} <span class="tiny">${n}</span></button>`;
+  }).join('');
+  const list = S.recipes.filter(r=>r.slot===POOL_SLOT)
+    .sort((a,b)=>(a.minutes||0)-(b.minutes||0));
+  $('#poolHint').textContent = `${S.recipes.length} tarif`;
+  $('#poolList').innerHTML = list.length ? list.map(r=>`
+    <details class="meal"><summary>${esc(r.name)}
+      <span class="tiny">${r.minutes||0} dk · ${r.protein_g||0} g</span></summary>
+      <div class="tiny" style="line-height:1.7;margin-top:4px">${esc(r.steps||'')}
+      ${(r.tags||[]).length?`<div style="margin-top:5px">${(r.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join(' ')}</div>`:''}
+      </div></details>`).join('') : 'Bu öğünde tarif yok.';
+}
+
+function renderShopping(){
+  const sh = S.menu.shopping || {};
+  const keys = Object.keys(sh);
+  if(!keys.length){ $('#menuShopOut').innerHTML=''; return; }
+  $('#menuShopOut').innerHTML = keys.map(k=>`
+    <details class="shop"><summary>${esc(k)}</summary>
+      ${Object.entries(sh[k]).map(([aisle,items])=>`
+        <div class="tiny" style="margin:8px 0 3px;color:var(--acc);text-transform:uppercase;letter-spacing:.08em">${esc(aisle)}</div>
+        <div class="muted" style="line-height:1.8">${items.map(i=>esc(i)).join('<br>')}</div>`).join('')}
+    </details>`).join('');
+}
+
+function renderTodayMenu(){
+  const plan = (S.menu && S.menu.plan) || [];
+  const today = plan.find(d=>d.date===iso(TODAY));
+  if(!today){
+    $('#todayMenu').innerHTML = `<div class="muted">Bu hafta menü kurulmamış.
+      <button class="btn sm" data-goto="pazar">Pazar check-in'e git</button></div>`;
+    $('#todayMenuHint').textContent=''; return;
+  }
+  const mins = SLOTS.reduce((a,[k])=>{ const r=recipeById(today[k]); return a+(r?r.minutes||0:0); },0);
+  const prot = SLOTS.reduce((a,[k])=>{ const r=recipeById(today[k]); return a+(r?r.protein_g||0:0); },0);
+  $('#todayMenuHint').textContent = `${mins} dk · ~${prot} g protein`;
+  $('#todayMenu').innerHTML = SLOTS.map(([k,label])=>{
+    const r = recipeById(today[k]);
+    if(!r) return `<div class="row"><span class="tag">${label}</span><div class="lab muted">—</div></div>`;
+    return `<details class="meal"><summary><span class="tag">${label}</span> ${esc(r.name)}
+        <span class="tiny">${r.minutes} dk</span></summary>
+      <div class="tiny" style="line-height:1.7;margin-top:4px">${esc(r.steps||'')}</div></details>`;
+  }).join('');
+}
 function areaTag(id){ const a=S.areas.find(x=>x.id===id); return a?`<span class="tag ${id}">${esc(a.name)}</span>`:''; }
 
 function renderToday(){
@@ -769,6 +1066,7 @@ document.addEventListener('click', async e=>{
   if(d.gi!==undefined){ const i=+d.gi; S.month.goals[i]=S.month.goals[i]||{area:S.areas[i].id,text:''};
     S.month.goals[i].done=!S.month.goals[i].done; saveMonth(); renderYol(); return; }
   if(d.cat){ CAT=d.cat; renderYol(); return; }
+  if(d.pool){ POOL_SLOT=d.pool; renderPool(); return; }
   if(d.msdel!==undefined){
     const hz=[...(S.compass.horizon||[])].sort((a,b)=>a.when.localeCompare(b.when));
     hz.splice(+d.msdel,1); S.compass.horizon=hz; saveCompass(); renderYol(); return;
@@ -817,6 +1115,25 @@ $('#parkAdd').onclick = async ()=>{
   $('#parkInput').value=''; renderPark(); flashSaved();
 };
 $('#parkInput').onkeydown = e=>{ if(e.key==='Enter') $('#parkAdd').click(); };
+$('#menuBuild').onclick = ()=>{
+  const plan = buildMenu(S.recipes, WEEK_START);
+  if(!plan){ alert('Tarif listesi eksik — her öğün için en az bir tarif gerekiyor.'); return; }
+  S.menu.plan = plan;
+  S.menu.shopping = buildShopping(plan, S.recipes);
+  saveMenu(); renderMenu(); renderToday(); flashSaved();
+};
+$('#menuShop').onclick = ()=>{
+  if(!(S.menu.plan||[]).length){ alert('Önce haftayı kur.'); return; }
+  S.menu.shopping = buildShopping(S.menu.plan, S.recipes);
+  saveMenu(); renderShopping(); flashSaved();
+};
+document.addEventListener('change', e=>{
+  const d = e.target.dataset;
+  if(d && d.menu!==undefined && d.slot){
+    S.menu.plan[+d.menu][d.slot] = e.target.value || null;
+    saveMenu(); renderMenu(); renderToday();
+  }
+});
 $('#cYear').oninput = e=>{ S.compass.yearText=e.target.value; saveCompass(); };
 $('#cQuarter').oninput = e=>{ S.compass.quarterText=e.target.value; saveCompass(); };
 $('#msAdd').onclick = ()=>{
@@ -984,12 +1301,21 @@ async function auth(kind){
   const email=$('#gEmail').value.trim(), password=$('#gPass').value;
   if(!email||!password){ $('#gMsg').textContent='E-posta ve şifre gerekli.'; return; }
   $('#gIn').disabled=$('#gUp').disabled=true; $('#gMsg').textContent='…';
-  const fn = kind==='up' ? DB.sb.auth.signUp({email,password}) : DB.sb.auth.signInWithPassword({email,password});
-  const {data,error} = await fn;
+  const {data,error} = kind==='up'
+    ? await DB.sb.auth.signUp({email,password})
+    : await DB.sb.auth.signInWithPassword({email,password});
   $('#gIn').disabled=$('#gUp').disabled=false;
-  if(error){ $('#gMsg').textContent = error.message; return; }
-  if(data.session) start();
-  else $('#gMsg').textContent = 'Hesap oluşturuldu. E-postanı doğruladıktan sonra giriş yap.';
+  const msg = $('#gMsg');
+  if(error){
+    msg.style.color='var(--warn)';
+    msg.textContent = /already registered/i.test(error.message)
+      ? 'Bu e-posta zaten kayıtlı — "Giriş yap"a bas.'
+      : (/invalid login/i.test(error.message) ? 'E-posta veya şifre hatalı.' : error.message);
+    return;
+  }
+  if(data.session){ start(); return; }
+  msg.style.color='var(--acc2)';
+  msg.textContent = '✓ Hesap oluşturuldu. E-postana gelen doğrulama linkine tıkla, sonra "Giriş yap".';
 }
 
 if(DEMO){ start(); }

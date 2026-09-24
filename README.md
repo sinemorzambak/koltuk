@@ -65,6 +65,25 @@ version of the same output, built from the same data, rendered in the same UI
 with a "written locally" note. The AI is an upgrade to the wording, never a
 dependency.
 
+## The meal planner
+
+The Sunday check-in also builds the week's food, because a plan that ignores what
+you eat gets abandoned by Wednesday. It is a small constraint solver, not a list:
+
+- recipes carry `slot` (breakfast/lunch/dinner), `minutes`, `protein_g`, `tags`
+  and structured `ingredients` (`item`, `qty`, `unit`, `aisle`)
+- generation applies real kitchen rules — a dish tagged `artikverir` ("makes
+  leftovers") makes the next day's lunch prefer `artiktan`; the Sunday `hazirlik`
+  batch-cook feeds Monday and Tuesday lunches; weekdays prefer `hizli`; a
+  `hazirlik` recipe can never land on a non-prep day, and a leftovers recipe can
+  never be chosen when there are no leftovers
+- the shopping list is derived, not written: ingredients across the chosen
+  recipes are summed by item and unit, grouped by aisle, and split into two trips
+  so the fresh produce for the back half of the week is bought later
+
+Today's three meals, with steps, appear on the Today tab — the payoff for the
+fifteen minutes spent on Sunday.
+
 ## Architecture
 
 ```
@@ -93,6 +112,12 @@ the repository.
 | `koltuk_settings` | the three active areas as JSON |
 | `koltuk_park` | parked wants with timestamps for the 30-day rule |
 | `design_tasks` | checklist items grouped by category |
+| `menu_recipes` | recipes with tags and structured ingredients |
+| `menu_weeks` | the week's plan and its derived shopping list |
+
+Every table carries a `user_id` defaulting to `auth.uid()`, with a row-level
+security policy of `user_id = auth.uid()` for authenticated users only — the
+anon key in the page grants nothing on its own.
 
 ## Running it
 
