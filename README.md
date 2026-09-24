@@ -4,7 +4,7 @@ A single-page life management system with an AI weekly check-in.
 No build step, no framework, no bundler — one HTML file, a Postgres database,
 and one serverless function that keeps an API key off the client.
 
-**Live demo:** _(add your Netlify URL)_ · opens with sample data, nothing is stored
+**Live demo:** https://glittery-fairy-0631ac.netlify.app/ · opens with sample data, nothing is stored
 **UI language:** Turkish
 
 ---
